@@ -73,7 +73,12 @@ func (r *ScanResult) SetOS(info OSInfo) *ScanResult {
 }
 
 func (r *ScanResult) SetValidationError(err *ValidationError) *ScanResult {
-	r.Error = err
+	if r.Error != nil {
+		r.Errors = append(r.Errors, err)
+	} else {
+		r.Error = err
+		r.Errors = append(r.Errors, err)
+	}
 	return r
 }
 

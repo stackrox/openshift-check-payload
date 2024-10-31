@@ -75,6 +75,7 @@ type ScanResult struct {
 	Path      string
 	Skip      bool
 	Error     *ValidationError
+	Errors    []*ValidationError
 }
 
 type ScanResults struct {

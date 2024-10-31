@@ -457,14 +457,16 @@ func walkDirScan(ctx context.Context, cfg *types.Config, tag *v1.TagReference, c
 			klog.V(1).InfoS("scanning success", "image", getImage(res), "path", innerPath, "status", "success")
 		} else {
 			status := res.Status()
-			klog.InfoS("scanning "+status,
-				"image", getImage(res),
-				"path", innerPath,
-				"error", res.Error.Error,
-				"component", getComponent(res),
-				"tag", getTag(res),
-				"rpm", res.RPM,
-				"status", status)
+			for _, err := range res.Errors {
+				klog.InfoS("scanning "+status,
+					"image", getImage(res),
+					"path", innerPath,
+					"error", err.Error,
+					"component", getComponent(res),
+					"tag", getTag(res),
+					"rpm", res.RPM,
+					"status", status)
+			}
 		}
 		results.Append(res)
 		return nil
