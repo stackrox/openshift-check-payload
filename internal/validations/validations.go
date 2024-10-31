@@ -411,6 +411,7 @@ checks:
 			// See if the error is to be ignored.
 			for _, list := range errIgnores {
 				if list.Ignore(innerPath, err.Error) {
+					klog.Info("ignoring %s for ", err.Error, innerPath)
 					continue checks
 				}
 			}
@@ -432,10 +433,12 @@ checks:
 					}
 				}
 			}
-			return res.SetValidationError(err)
+			res.SetValidationError(err)
 		}
 	}
-
+	if res.Error != nil {
+		return res
+	}
 	return res.Success()
 }
 
