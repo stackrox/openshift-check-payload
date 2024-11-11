@@ -301,16 +301,22 @@ func validateExcludedCryptoModules(ctx context.Context, path string, baton *Bato
 	// Make this more flexible by deriving the excluded modules from
 	// configuration.
 	excluded := []byte("golang.org/x/crypto")
+	errs := []*types.ValidationError{}
 	symtable, err := golang.ReadTable(path, baton.GoBuildInfo)
 	if err != nil {
 		return types.NewValidationError(fmt.Errorf("go: could not read table for %v: %w", filepath.Base(path), err))
 	}
 	for _, f := range symtable.Funcs {
 		if strings.Contains(f.Name, string(excluded)) {
-			return types.NewValidationError(types.ErrDetectedExcludedModule).SetWarning()
+			fmt.Fprintf(os.Stderr, "%s\n", f.Name)
+			errs = append(errs, types.NewValidationError(types.ErrDetectedExcludedModule).SetWarning())
 		}
 	}
-	return nil
+	if len(errs) > 0 {
+		return errs[0]
+	} else {
+		return nil
+	}
 }
 
 func isGoExecutable(path string, baton *Baton) (bool, error) {
