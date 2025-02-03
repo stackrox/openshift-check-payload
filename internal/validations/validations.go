@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -73,6 +74,7 @@ var validationFns = map[string][]ValidationFn{
 		validateGoStatic,
 		validateGoOpenssl,
 		validateGoTagsAndExperiment,
+		validateExcludedCryptoModules,
 	},
 	"exe": {
 		validateNotStatic,
@@ -295,6 +297,35 @@ func validateNotStatic(_ context.Context, _ string, baton *Baton) *types.Validat
 	return types.NewValidationError(types.ErrNotDynLinked)
 }
 
+func validateExcludedCryptoModules(ctx context.Context, path string, baton *Baton) *types.ValidationError {
+	var symbols bytes.Buffer
+	cmd := exec.CommandContext(ctx, "nm", "-j", path)
+	cmd.Stdout = &symbols
+	if err := cmd.Run(); err != nil {
+		return types.NewValidationError(err)
+	}
+
+	// Make this more flexible by deriving the excluded modules from
+	// configuration.
+	excluded := []byte("golang.org/x/crypto")
+	errs := []*types.ValidationError{}
+	symtable, err := golang.ReadTable(path, baton.GoBuildInfo)
+	if err != nil {
+		return types.NewValidationError(fmt.Errorf("go: could not read table for %v: %w", filepath.Base(path), err))
+	}
+	for _, f := range symtable.Funcs {
+		if strings.Contains(f.Name, string(excluded)) {
+			fmt.Fprintf(os.Stderr, "%s\n", f.Name)
+			errs = append(errs, types.NewValidationError(types.ErrDetectedExcludedModule).SetWarning())
+		}
+	}
+	if len(errs) > 0 {
+		return errs[0]
+	} else {
+		return nil
+	}
+}
+
 func isGoExecutable(path string, baton *Baton) (bool, error) {
 	bi, err := buildinfo.ReadFile(path)
 	if err != nil {
@@ -393,6 +424,7 @@ checks:
 			// See if the error is to be ignored.
 			for _, list := range errIgnores {
 				if list.Ignore(innerPath, err.Error) {
+					klog.Info("ignoring %s for ", err.Error, innerPath)
 					continue checks
 				}
 			}
@@ -414,10 +446,12 @@ checks:
 					}
 				}
 			}
-			return res.SetValidationError(err)
+			res.SetValidationError(err)
 		}
 	}
-
+	if res.Error != nil {
+		return res
+	}
 	return res.Success()
 }
 
