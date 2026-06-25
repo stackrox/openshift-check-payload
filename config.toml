@@ -215,29 +215,6 @@ files = ["/usr/bin/cdi-containerimage-server"]
 error = "ErrLibcryptoSoMissing"
 files = ["/opt/cni/bin/istio-cni-rhel9"]
 
-[[payload.rhacs-main-container.ignore]]
-error = "ErrGoNotCgoEnabled"
-dirs = ["/assets/downloads/cli"]
-
-[[payload.rhacs-main-container.ignore]]
-error = "ErrGoNoCgoInit"
-dirs = ["/assets/downloads/cli"]
-
-[[payload.rhacs-main-container.ignore]]
-error = "ErrGoMissingSymbols"
-dirs = ["/assets/downloads/cli"]
-
-[[payload.rhacs-main-container.ignore]]
-error = "ErrNotDynLinked"
-dirs = ["/assets/downloads/cli"]
-
-[[payload.rhacs-main-container.ignore]]
-error = "ErrLibcryptoMissing"
-dirs = ["/assets/downloads/cli"]
-
-[[payload.rhacs-main-container.ignore]]
-error = "ErrGoMissingTag"
-dirs = ["/assets/downloads/cli"]
 
 [[payload.mta-cli-container.ignore]]
 error = "ErrGoNotCgoEnabled"
